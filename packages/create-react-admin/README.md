@@ -5,7 +5,7 @@
 ## Usage
 
 ```
-const createReactAdmin = require('create-react-admin');
+const createReactAdmin = require('create-xiaoma-admin');
 
 // TODO: DEMONSTRATE API
 ```

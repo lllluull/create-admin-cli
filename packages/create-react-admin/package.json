@@ -1,5 +1,5 @@
 {
-  "name": "create-react-admin",
+  "name": "create-xiaoma-admin",
   "version": "1.0.0",
   "description": "> TODO: description",
   "author": "hupengpeng <hupp@xiaoma.wang>",
@@ -24,5 +24,6 @@
     "fs-extra": "^9.0.1",
     "semver": "^7.3.2",
     "validate-npm-package-name": "^3.0.0"
-  }
+  },
+  "gitHead": "dbca1adc98859f83be1ada9ceb1f4962b237762c"
 }
