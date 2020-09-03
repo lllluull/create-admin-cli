@@ -1,0 +1,28 @@
+{
+  "name": "create-react-admin",
+  "version": "3.4.1",
+  "description": "> TODO: description",
+  "author": "hupengpeng <hupp@xiaoma.wang>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/create-react-admin.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "@babel/core": "^7.11.5",
+    "chalk": "^4.1.0",
+    "commander": "^6.1.0",
+    "cross-spawn": "^7.0.3",
+    "fs-extra": "^9.0.1",
+    "semver": "^7.3.2",
+    "validate-npm-package-name": "^3.0.0"
+  }
+}
