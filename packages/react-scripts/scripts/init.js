@@ -16,7 +16,7 @@ module.exports = function(
   templateName
 ) {
   const ownPath = paths.ownPath;
-  const appPath = paths.appPath;
+  // const appPath = paths.appPath;
   const ownPackage = require(path.join(ownPath, 'package.json'));
   const appPackage = {
     eslintConfig: 'react-app',
