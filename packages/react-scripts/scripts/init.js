@@ -6,8 +6,6 @@ process.on('unhandledRejection', err => {
 const fs = require('fs-extra')
 const { defaultBrowsers } = require('react-dev-utils/browsersHelper');
 const paths = require('../config/paths');
-const ownPath = paths.ownPath;
-const appPath = paths.appPath;
 const path = require('path')
 
 module.exports = function(
@@ -17,6 +15,8 @@ module.exports = function(
   originalDirectory,
   templateName
 ) {
+  const ownPath = paths.ownPath;
+  const appPath = paths.appPath;
   const ownPackage = require(path.join(ownPath, 'package.json'));
   const appPackage = {
     eslintConfig: 'react-app',
