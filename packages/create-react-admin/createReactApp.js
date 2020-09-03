@@ -7,7 +7,8 @@ const path = require('path')
 const os = require('os');
 const validateProjectName = require('validate-npm-package-name');
 const fs = require('fs-extra')
-const spawn = require('cross-spawn')
+const spawn = require('cross-spawn');
+const { Console } = require('console');
 const execSync = require('child_process').execSync;
 
 const dependenciess = ['react', 'react-dom', 'react-router-dom', 'xiaoma-react-scripts']
@@ -231,24 +232,25 @@ function run(
         verbose,
     ).then(async () => {
         console.log(
-            chalk.red(`Installing completed!`)
+            chalk.green(`Installing completed!`)
           );
         await executeNodeScript(
           {
-            cwd: process.cwd(),
+            cwd: root,
             args: [],
           },
           [root, appName, verbose, originalDirectory, ''],
           `
         var init = require('xiaoma-react-scripts/scripts/init.js');
         init.apply(null, JSON.parse(process.argv[1]));
-      `
+      `,
+      root
       );
     })
 }
 
 
-function executeNodeScript({ cwd, args }, data, source) {
+function executeNodeScript({ cwd, args }, data, source, root) {
   return new Promise((resolve, reject) => {
     const child = spawn(
       process.execPath,
