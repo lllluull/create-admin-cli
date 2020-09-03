@@ -236,7 +236,7 @@ function run(
         await executeNodeScript(
           {
             cwd: process.cwd(),
-            args: nodeArgs,
+            args: [],
           },
           [root, appName, verbose, originalDirectory, templateName],
           `
