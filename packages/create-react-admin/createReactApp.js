@@ -238,7 +238,7 @@ function run(
             cwd: process.cwd(),
             args: [],
           },
-          [root, appName, verbose, originalDirectory, templateName],
+          [root, appName, verbose, originalDirectory, ''],
           `
         var init = require('xiaoma-react-scripts/scripts/init.js');
         init.apply(null, JSON.parse(process.argv[1]));
