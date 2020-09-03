@@ -159,7 +159,14 @@ function init() {
         console.log();
         process.exit(1);
       } else {
-        
+        createApp(
+          projectName,
+          program.verbose,
+          program.scriptsVersion,
+          program.template,
+          program.useNpm,
+          program.usePnp
+        );
       }
     });
 }
@@ -326,7 +333,6 @@ function checkAppName(appName) {
     }
 }
 
-init()
 
 module.exports = {
     init
