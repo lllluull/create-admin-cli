@@ -16,7 +16,7 @@ function checkForLatestVersion() {
     return new Promise((resolve, reject) => {
       https
         .get(
-          'https://registry.npmjs.org/-/package/create-react-app/dist-tags',
+          'https://registry.npmjs.org/-/package/create-xiaoma-admin/dist-tags',
           res => {
             if (res.statusCode === 200) {
               let body = '';
