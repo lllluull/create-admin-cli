@@ -12,7 +12,8 @@
   },
   "files": [
     "scripts",
-    "config"
+    "config",
+    "template"
   ],
   "bin": {
     "react-scripts": "./bin/react-scripts.js"
