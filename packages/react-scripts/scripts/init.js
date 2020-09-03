@@ -18,16 +18,23 @@ module.exports = function(
   const ownPath = paths.ownPath;
   // const appPath = paths.appPath;
   const ownPackage = require(path.join(ownPath, 'package.json'));
-  const appPackage = {
-    eslintConfig: 'react-app',
-    browserslist: defaultBrowsers,
-    dependencies: ownPackage.dependencies
-  }
+  const appPackage = require(path.join(appPath, 'package.json'))
+  appPackage.eslintConfig =  {
+    extends: 'react-app',
+  };
+  appPackage.browserslist = defaultBrowsers
+  appPackage.dependencies = {...appPackage.dependencies, ...ownPackage.dependencies}
   fs.writeFileSync(
     path.join(appPath, 'package.json'),
     JSON.stringify(appPackage, null, 2) + os.EOL
   );
   fs.copy(`${ownPath}/config`, `${appPath}/config`)
+  fs.copy(`${ownPath}/template/src`, `${appPath}/src`)
+  fs.copy(`${ownPath}/template/public`, `${appPath}/public`)
+  fs.copy(`${ownPath}/template/gitignore`, `${appPath}/.gitignore`)
+  
+
   .then(() => console.log('create config completed'))
   .catch((e) => console.log(error))
+
 }
