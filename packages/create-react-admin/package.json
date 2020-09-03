@@ -21,7 +21,6 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@babel/core": "^7.11.5",
     "chalk": "^4.1.0",
     "commander": "^6.1.0",
     "cross-spawn": "^7.0.3",

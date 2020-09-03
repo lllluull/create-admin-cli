@@ -131,7 +131,7 @@ function init() {
   checkForLatestVersion()
     .catch(() => {
       try {
-        return execSync('npm view create-react-app version').toString().trim();
+        return execSync('npm view create-xiaoma-admin version').toString().trim();
       } catch (e) {
         return null;
       }
@@ -141,15 +141,15 @@ function init() {
         console.log();
         console.error(
           chalk.yellow(
-            `You are running \`create-react-app\` ${packageJson.version}, which is behind the latest release (${latest}).\n\n` +
+            `You are running \`create-xiaoma-admin\` ${packageJson.version}, which is behind the latest release (${latest}).\n\n` +
               'We no longer support global installation of Create React App.'
           )
         );
         console.log();
         console.log(
           'Please remove any global installs with one of the following commands:\n' +
-            '- npm uninstall -g create-react-app\n' +
-            '- yarn global remove create-react-app'
+            '- npm uninstall -g create-xiaoma-admin\n' +
+            '- yarn global remove create-xiaoma-admin'
         );
         console.log();
         console.log(
@@ -159,14 +159,7 @@ function init() {
         console.log();
         process.exit(1);
       } else {
-        createApp(
-            projectName,
-            program.verbose,
-            program.scriptsVersion,
-            program.template,
-            program.useNpm,
-            program.usePnp
-          );
+        
       }
     });
 }
