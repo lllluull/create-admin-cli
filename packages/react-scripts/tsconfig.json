@@ -27,7 +27,6 @@
       "resolveJsonModule": true,
       "isolatedModules": true
     },
-    "exclude": ["node_modules", "**/node_modules/*", "build", ".next", "dist", "test", "static", "next.config.js"],
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]
+    "exclude": ["node_modules", "**/node_modules/*"],
   }
   

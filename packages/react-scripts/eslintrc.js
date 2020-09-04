@@ -9,11 +9,11 @@ module.exports = {
     "prettier/react",
     "plugin:react/recommended",
   ],
-  plugins: ["prettier"],
+  plugins: ["prettier", "@typescript-eslint"],
   rules: {
     "prettier/prettier": "error",
   },
-  parser: "babel-eslint",
+  parser: "@typescript-eslint/parser",
   settings: {
     react: {
       pragma: "React",
