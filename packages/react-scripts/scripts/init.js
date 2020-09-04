@@ -35,6 +35,7 @@ module.exports = function(
   fs.copy(`${ownPath}/config`, `${appPath}/config`)
   fs.copy(`${ownPath}/template/src`, `${appPath}/src`)
   fs.copy(`${ownPath}/template/public`, `${appPath}/public`)
+  fs.copy(`${ownPath}/scripts`, `${appPath}/scripts`)
   fs.copy(`${ownPath}/template/gitignore`, `${appPath}/.gitignore`)
   .then(() => console.log('create config completed'))
   .catch((e) => console.log(error))

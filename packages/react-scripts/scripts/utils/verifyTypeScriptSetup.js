@@ -10,154 +10,262 @@
 
 const chalk = require('react-dev-utils/chalk');
 const fs = require('fs');
-const semver = require('semver');
+const resolve = require('resolve');
 const path = require('path');
+const paths = require('../../config/paths');
+const os = require('os');
+const immer = require('react-dev-utils/immer').produce;
+const globby = require('react-dev-utils/globby').sync;
 
-// We assume that having wrong versions of these
-// in the tree will likely break your setup.
-// This is a relatively low-effort way to find common issues.
-function verifyPackageTree() {
-  const depsToCheck = [
-    // These are packages most likely to break in practice.
-    // See https://github.com/facebook/create-react-app/issues/1795 for reasons why.
-    // I have not included Babel here because plugins typically don't import Babel (so it's not affected).
-    'babel-eslint',
-    'babel-jest',
-    'babel-loader',
-    'eslint',
-    'jest',
-    'webpack',
-    'webpack-dev-server',
-  ];
-  // Inlined from semver-regex, MIT license.
-  // Don't want to make this a dependency after ejecting.
-  const getSemverRegex = () =>
-    /\bv?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?\b/gi;
-  const ownPackageJson = require('../../package.json');
-  const expectedVersionsByDep = {};
-  // Gather wanted deps
-  depsToCheck.forEach(dep => {
-    const expectedVersion = ownPackageJson.dependencies[dep];
-    if (!expectedVersion) {
-      throw new Error('This dependency list is outdated, fix it.');
+function writeJson(fileName, object) {
+  fs.writeFileSync(
+    fileName,
+    JSON.stringify(object, null, 2).replace(/\n/g, os.EOL) + os.EOL
+  );
+}
+
+function verifyNoTypeScript() {
+  const typescriptFiles = globby(
+    ['**/*.(ts|tsx)', '!**/node_modules', '!**/*.d.ts'],
+    { cwd: paths.appSrc }
+  );
+  if (typescriptFiles.length > 0) {
+    console.warn(
+      chalk.yellow(
+        `We detected TypeScript in your project (${chalk.bold(
+          `src${path.sep}${typescriptFiles[0]}`
+        )}) and created a ${chalk.bold('tsconfig.json')} file for you.`
+      )
+    );
+    console.warn();
+    return false;
+  }
+  return true;
+}
+
+function verifyTypeScriptSetup() {
+  let firstTimeSetup = false;
+
+  if (!fs.existsSync(paths.appTsConfig)) {
+    if (verifyNoTypeScript()) {
+      return;
     }
-    if (!getSemverRegex().test(expectedVersion)) {
-      throw new Error(
-        `The ${dep} package should be pinned, instead got version ${expectedVersion}.`
+    writeJson(paths.appTsConfig, {});
+    firstTimeSetup = true;
+  }
+
+  const isYarn = fs.existsSync(paths.yarnLockFile);
+
+  // Ensure typescript is installed
+  let ts;
+  try {
+    // TODO: Remove this hack once `globalThis` issue is resolved
+    // https://github.com/jsdom/jsdom/issues/2961
+    const globalThisWasDefined = !!global.globalThis;
+
+    ts = require(resolve.sync('typescript', {
+      basedir: paths.appNodeModules,
+    }));
+
+    if (!globalThisWasDefined && !!global.globalThis) {
+      delete global.globalThis;
+    }
+  } catch (_) {
+    console.error(
+      chalk.bold.red(
+        `It looks like you're trying to use TypeScript but do not have ${chalk.bold(
+          'typescript'
+        )} installed.`
+      )
+    );
+    console.error(
+      chalk.bold(
+        'Please install',
+        chalk.cyan.bold('typescript'),
+        'by running',
+        chalk.cyan.bold(
+          isYarn ? 'yarn add typescript' : 'npm install typescript'
+        ) + '.'
+      )
+    );
+    console.error(
+      chalk.bold(
+        'If you are not trying to use TypeScript, please remove the ' +
+          chalk.cyan('tsconfig.json') +
+          ' file from your package root (and any TypeScript files).'
+      )
+    );
+    console.error();
+    process.exit(1);
+  }
+
+  const compilerOptions = {
+    // These are suggested values and will be set when not present in the
+    // tsconfig.json
+    // 'parsedValue' matches the output value from ts.parseJsonConfigFileContent()
+    target: {
+      parsedValue: ts.ScriptTarget.ES5,
+      suggested: 'es5',
+    },
+    lib: { suggested: ['dom', 'dom.iterable', 'esnext'] },
+    allowJs: { suggested: true },
+    skipLibCheck: { suggested: true },
+    esModuleInterop: { suggested: true },
+    allowSyntheticDefaultImports: { suggested: true },
+    strict: { suggested: true },
+    forceConsistentCasingInFileNames: { suggested: true },
+    noFallthroughCasesInSwitch: { suggested: true },
+
+    // These values are required and cannot be changed by the user
+    // Keep this in sync with the webpack config
+    module: {
+      parsedValue: ts.ModuleKind.ESNext,
+      value: 'esnext',
+      reason: 'for import() and import/export',
+    },
+    moduleResolution: {
+      parsedValue: ts.ModuleResolutionKind.NodeJs,
+      value: 'node',
+      reason: 'to match webpack resolution',
+    },
+    resolveJsonModule: { value: true, reason: 'to match webpack loader' },
+    isolatedModules: { value: true, reason: 'implementation limitation' },
+    noEmit: { value: true },
+    jsx: {
+      parsedValue: ts.JsxEmit.React,
+      suggested: 'react',
+    },
+    paths: { value: undefined, reason: 'aliased imports are not supported' },
+  };
+
+  const formatDiagnosticHost = {
+    getCanonicalFileName: fileName => fileName,
+    getCurrentDirectory: ts.sys.getCurrentDirectory,
+    getNewLine: () => os.EOL,
+  };
+
+  const messages = [];
+  let appTsConfig;
+  let parsedTsConfig;
+  let parsedCompilerOptions;
+  try {
+    const { config: readTsConfig, error } = ts.readConfigFile(
+      paths.appTsConfig,
+      ts.sys.readFile
+    );
+
+    if (error) {
+      throw new Error(ts.formatDiagnostic(error, formatDiagnosticHost));
+    }
+
+    appTsConfig = readTsConfig;
+
+    // Get TS to parse and resolve any "extends"
+    // Calling this function also mutates the tsconfig above,
+    // adding in "include" and "exclude", but the compilerOptions remain untouched
+    let result;
+    parsedTsConfig = immer(readTsConfig, config => {
+      result = ts.parseJsonConfigFileContent(
+        config,
+        ts.sys,
+        path.dirname(paths.appTsConfig)
       );
-    }
-    expectedVersionsByDep[dep] = expectedVersion;
-  });
-  // Verify we don't have other versions up the tree
-  let currentDir = __dirname;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const previousDir = currentDir;
-    currentDir = path.resolve(currentDir, '..');
-    if (currentDir === previousDir) {
-      // We've reached the root.
-      break;
-    }
-    const maybeNodeModules = path.resolve(currentDir, 'node_modules');
-    if (!fs.existsSync(maybeNodeModules)) {
-      continue;
-    }
-    depsToCheck.forEach(dep => {
-      const maybeDep = path.resolve(maybeNodeModules, dep);
-      if (!fs.existsSync(maybeDep)) {
-        return;
-      }
-      const maybeDepPackageJson = path.resolve(maybeDep, 'package.json');
-      if (!fs.existsSync(maybeDepPackageJson)) {
-        return;
-      }
-      const depPackageJson = JSON.parse(
-        fs.readFileSync(maybeDepPackageJson, 'utf8')
-      );
-      const expectedVersion = expectedVersionsByDep[dep];
-      if (!semver.satisfies(depPackageJson.version, expectedVersion)) {
-        console.error(
-          chalk.red(
-            `\nThere might be a problem with the project dependency tree.\n` +
-              `It is likely ${chalk.bold(
-                'not'
-              )} a bug in Create React App, but something you need to fix locally.\n\n`
-          ) +
-            `The ${chalk.bold(
-              ownPackageJson.name
-            )} package provided by Create React App requires a dependency:\n\n` +
-            chalk.green(
-              `  "${chalk.bold(dep)}": "${chalk.bold(expectedVersion)}"\n\n`
-            ) +
-            `Don't try to install it manually: your package manager does it automatically.\n` +
-            `However, a different version of ${chalk.bold(
-              dep
-            )} was detected higher up in the tree:\n\n` +
-            `  ${chalk.bold(chalk.red(maybeDep))} (version: ${chalk.bold(
-              chalk.red(depPackageJson.version)
-            )}) \n\n` +
-            `Manually installing incompatible versions is known to cause hard-to-debug issues.\n\n` +
-            chalk.red(
-              `If you would prefer to ignore this check, add ${chalk.bold(
-                'SKIP_PREFLIGHT_CHECK=true'
-              )} to an ${chalk.bold('.env')} file in your project.\n` +
-                `That will permanently disable this message but you might encounter other issues.\n\n`
-            ) +
-            `To ${chalk.green(
-              'fix'
-            )} the dependency tree, try following the steps below in the exact order:\n\n` +
-            `  ${chalk.cyan('1.')} Delete ${chalk.bold(
-              'package-lock.json'
-            )} (${chalk.underline('not')} ${chalk.bold(
-              'package.json'
-            )}!) and/or ${chalk.bold('yarn.lock')} in your project folder.\n` +
-            `  ${chalk.cyan('2.')} Delete ${chalk.bold(
-              'node_modules'
-            )} in your project folder.\n` +
-            `  ${chalk.cyan('3.')} Remove "${chalk.bold(
-              dep
-            )}" from ${chalk.bold('dependencies')} and/or ${chalk.bold(
-              'devDependencies'
-            )} in the ${chalk.bold(
-              'package.json'
-            )} file in your project folder.\n` +
-            `  ${chalk.cyan('4.')} Run ${chalk.bold(
-              'npm install'
-            )} or ${chalk.bold(
-              'yarn'
-            )}, depending on the package manager you use.\n\n` +
-            `In most cases, this should be enough to fix the problem.\n` +
-            `If this has not helped, there are a few other things you can try:\n\n` +
-            `  ${chalk.cyan('5.')} If you used ${chalk.bold(
-              'npm'
-            )}, install ${chalk.bold(
-              'yarn'
-            )} (http://yarnpkg.com/) and repeat the above steps with it instead.\n` +
-            `     This may help because npm has known issues with package hoisting which may get resolved in future versions.\n\n` +
-            `  ${chalk.cyan('6.')} Check if ${chalk.bold(
-              maybeDep
-            )} is outside your project directory.\n` +
-            `     For example, you might have accidentally installed something in your home folder.\n\n` +
-            `  ${chalk.cyan('7.')} Try running ${chalk.bold(
-              `npm ls ${dep}`
-            )} in your project folder.\n` +
-            `     This will tell you which ${chalk.underline(
-              'other'
-            )} package (apart from the expected ${chalk.bold(
-              ownPackageJson.name
-            )}) installed ${chalk.bold(dep)}.\n\n` +
-            `If nothing else helps, add ${chalk.bold(
-              'SKIP_PREFLIGHT_CHECK=true'
-            )} to an ${chalk.bold('.env')} file in your project.\n` +
-            `That would permanently disable this preflight check in case you want to proceed anyway.\n\n` +
-            chalk.cyan(
-              `P.S. We know this message is long but please read the steps above :-) We hope you find them helpful!\n`
-            )
-        );
-        process.exit(1);
-      }
     });
+
+    if (result.errors && result.errors.length) {
+      throw new Error(
+        ts.formatDiagnostic(result.errors[0], formatDiagnosticHost)
+      );
+    }
+
+    parsedCompilerOptions = result.options;
+  } catch (e) {
+    if (e && e.name === 'SyntaxError') {
+      console.error(
+        chalk.red.bold(
+          'Could not parse',
+          chalk.cyan('tsconfig.json') + '.',
+          'Please make sure it contains syntactically correct JSON.'
+        )
+      );
+    }
+
+    console.log(e && e.message ? `${e.message}` : '');
+    process.exit(1);
+  }
+
+  if (appTsConfig.compilerOptions == null) {
+    appTsConfig.compilerOptions = {};
+    firstTimeSetup = true;
+  }
+
+  for (const option of Object.keys(compilerOptions)) {
+    const { parsedValue, value, suggested, reason } = compilerOptions[option];
+
+    const valueToCheck = parsedValue === undefined ? value : parsedValue;
+    const coloredOption = chalk.cyan('compilerOptions.' + option);
+
+    if (suggested != null) {
+      if (parsedCompilerOptions[option] === undefined) {
+        appTsConfig.compilerOptions[option] = suggested;
+        messages.push(
+          `${coloredOption} to be ${chalk.bold(
+            'suggested'
+          )} value: ${chalk.cyan.bold(suggested)} (this can be changed)`
+        );
+      }
+    } else if (parsedCompilerOptions[option] !== valueToCheck) {
+      appTsConfig.compilerOptions[option] = value;
+      messages.push(
+        `${coloredOption} ${chalk.bold(
+          valueToCheck == null ? 'must not' : 'must'
+        )} be ${valueToCheck == null ? 'set' : chalk.cyan.bold(value)}` +
+          (reason != null ? ` (${reason})` : '')
+      );
+    }
+  }
+
+  // tsconfig will have the merged "include" and "exclude" by this point
+  if (parsedTsConfig.include == null) {
+    appTsConfig.include = ['src'];
+    messages.push(
+      `${chalk.cyan('include')} should be ${chalk.cyan.bold('src')}`
+    );
+  }
+
+  if (messages.length > 0) {
+    if (firstTimeSetup) {
+      console.log(
+        chalk.bold(
+          'Your',
+          chalk.cyan('tsconfig.json'),
+          'has been populated with default values.'
+        )
+      );
+      console.log();
+    } else {
+      console.warn(
+        chalk.bold(
+          'The following changes are being made to your',
+          chalk.cyan('tsconfig.json'),
+          'file:'
+        )
+      );
+      messages.forEach(message => {
+        console.warn('  - ' + message);
+      });
+      console.warn();
+    }
+    writeJson(paths.appTsConfig, appTsConfig);
+  }
+
+  // Reference `react-scripts` types
+  if (!fs.existsSync(paths.appTypeDeclarations)) {
+    fs.writeFileSync(
+      paths.appTypeDeclarations,
+      `/// <reference types="react-scripts" />${os.EOL}`
+    );
   }
 }
 
-module.exports = verifyPackageTree;
+module.exports = verifyTypeScriptSetup;
