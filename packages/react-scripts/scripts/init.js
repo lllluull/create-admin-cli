@@ -19,9 +19,6 @@ module.exports = function(
   // const appPath = paths.appPath;
   const ownPackage = require(path.join(ownPath, 'package.json'));
   const appPackage = require(path.join(appPath, 'package.json'))
-  appPackage.eslintConfig =  {
-    extends: 'react-app',
-  };
   appPackage.browserslist = defaultBrowsers
   appPackage.dependencies = {...appPackage.dependencies, ...ownPackage.dependencies}
   appPackage.scripts = {
