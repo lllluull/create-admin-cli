@@ -24,6 +24,10 @@ module.exports = function(
   };
   appPackage.browserslist = defaultBrowsers
   appPackage.dependencies = {...appPackage.dependencies, ...ownPackage.dependencies}
+  appPackage.scripts = {
+    start: 'react-scripts start',
+    build: 'react-scripts build',
+  }
   fs.writeFileSync(
     path.join(appPath, 'package.json'),
     JSON.stringify(appPackage, null, 2) + os.EOL
@@ -32,8 +36,6 @@ module.exports = function(
   fs.copy(`${ownPath}/template/src`, `${appPath}/src`)
   fs.copy(`${ownPath}/template/public`, `${appPath}/public`)
   fs.copy(`${ownPath}/template/gitignore`, `${appPath}/.gitignore`)
-  
-
   .then(() => console.log('create config completed'))
   .catch((e) => console.log(error))
 
