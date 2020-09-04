@@ -37,6 +37,7 @@ module.exports = function(
   fs.copy(`${ownPath}/template/public`, `${appPath}/public`)
   fs.copy(`${ownPath}/scripts`, `${appPath}/scripts`)
   fs.copy(`${ownPath}/template/gitignore`, `${appPath}/.gitignore`)
+  fs.copy(`${ownPath}/template/babelrc`, `${appPath}/.babelrc`)
   .then(() => console.log('create config completed'))
   .catch((e) => console.log(error))
 
