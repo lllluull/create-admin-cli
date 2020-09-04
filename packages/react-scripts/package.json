@@ -16,7 +16,7 @@
 		"template",
 		"bin",
 		".vscode",
-		".eslint.js",
+		"eslintrc.js",
 		"prettierrc"
 	],
 	"bin": {
