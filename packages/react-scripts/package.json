@@ -1,6 +1,6 @@
 {
 	"name": "xiaoma-react-scripts",
-	"version": "1.0.24",
+	"version": "1.0.25",
 	"description": "> TODO: description",
 	"author": "hupengpeng <hupp@xiaoma.wang>",
 	"homepage": "",
@@ -90,18 +90,18 @@
 	},
 	"babel": {
 		"presets": [
-		  "react-app"
+			"react-app"
 		],
 		"plugins": [
-		  [
-			"import",
-			{
-			  "libraryName": "antd",
-			  "libraryDirectory": "es",
-			  "style": "css"
-			}
-		  ]
+			[
+				"import",
+				{
+					"libraryName": "antd",
+					"libraryDirectory": "es",
+					"style": "css"
+				}
+			]
 		]
-	  },
+	},
 	"gitHead": "dbca1adc98859f83be1ada9ceb1f4962b237762c"
 }
