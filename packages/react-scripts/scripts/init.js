@@ -21,6 +21,7 @@ module.exports = function(
   const appPackage = require(path.join(appPath, 'package.json'))
   appPackage.browserslist = defaultBrowsers
   appPackage.dependencies = {...appPackage.dependencies, ...ownPackage.dependencies}
+  appPackage.babel = {...ownPackage.babel}
   appPackage.scripts = {
     start: 'react-scripts start',
     build: 'react-scripts build',
