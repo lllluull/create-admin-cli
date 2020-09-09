@@ -35,7 +35,6 @@ module.exports = function(
   fs.copy(`${ownPath}/template/public`, `${appPath}/public`)
   fs.copy(`${ownPath}/scripts`, `${appPath}/scripts`)
   fs.copy(`${ownPath}/template/gitignore`, `${appPath}/.gitignore`)
-  fs.copy(`${ownPath}/template/babelrc`, `${appPath}/.babelrc`)
   fs.copy(`${ownPath}/eslintrc.js`, `${appPath}/.eslintrc.js`)
   fs.copy(`${ownPath}/prettierrc`, `${appPath}/.prettierrc`)
   fs.copy(`${ownPath}/tsconfig.json`, `${appPath}/tsconfig.json`)
