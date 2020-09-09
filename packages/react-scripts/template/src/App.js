@@ -1,5 +1,6 @@
 import React from "react"
 import "./App.css"
+import { Button } from 'antd'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         >
           Learn React
         </a>
+        <Button>按钮</Button>
       </header>
     </div>
   )
